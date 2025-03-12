@@ -1,3 +1,13 @@
+// validation
+interface Validatable {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
 // autobind decorator
 function autobind(
   _1: any, // target: any,
