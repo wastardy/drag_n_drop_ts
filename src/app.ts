@@ -1,4 +1,4 @@
-// validation
+//#region validation
 interface Validatable {
   value: string | number;
   required?: boolean;
@@ -47,7 +47,9 @@ function validate(validatableInput: Validatable) {
 
   return isValid;
 }
+//#endregion
 
+//#region decorators
 // autobind decorator
 function autobind(
   _1: any, // target: any,
@@ -65,8 +67,9 @@ function autobind(
 
   return adjastedDescriptor;
 }
+//#endregion
 
-// Project input class
+//#region  project input class
 class ProjectInput {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
@@ -115,10 +118,28 @@ class ProjectInput {
     const enteredDescription = this.descriptionInputElement.value;
     const enteredPeople = this.peopleInputElement.value;
 
+    const titleValidatable: Validatable = {
+      value: enteredTitle,
+      required: true,
+    };
+
+    const descriptionValidatable: Validatable = {
+      value: enteredDescription,
+      required: true,
+      minLength: 5,
+    };
+
+    const peopleValidatable: Validatable = {
+      value: +enteredPeople,
+      required: true,
+      min: 1,
+      max: 10,
+    };
+
     if (
-      validate({ value: enteredTitle, required: true, minLength: 5 }) &&
-      validate({ value: enteredDescription, required: true, minLength: 5 }) &&
-      validate({ value: enteredPeople, required: true, min: 1 })
+      !validate(titleValidatable) ||
+      !validate(descriptionValidatable) ||
+      !validate(peopleValidatable)
     ) {
       alert("Invalid input, please try again!");
       return;
@@ -155,5 +176,7 @@ class ProjectInput {
     this.hostElement.insertAdjacentElement("afterbegin", this.element);
   }
 }
+//#endregion
 
+// instantiate the class
 const projectInput = new ProjectInput();
