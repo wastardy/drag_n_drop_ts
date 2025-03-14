@@ -138,7 +138,7 @@ function autobind(
 //#endregion
 
 //#region component base class
-abstract class Coponent<T extends HTMLElement, U extends HTMLElement> {
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
   templateElement: HTMLTemplateElement;
   hostElement: T;
   element: U;
@@ -176,49 +176,21 @@ abstract class Coponent<T extends HTMLElement, U extends HTMLElement> {
     );
   }
 
-  abstract configure(): void;
+  abstract configure?(): void;
   abstract renderContent(): void;
 }
 //#endregion
 
 //#region project list calss
-class ProjectList {
-  templateElement: HTMLTemplateElement;
-  hostElement: HTMLDivElement;
-  element: HTMLElement;
+class ProjectList extends Component<HTMLDivElement, HTMLElement> {
   assignedProjects: Project[];
 
   constructor(private type: "active" | "finished") {
-    this.templateElement = document.getElementById(
-      "project-list"
-    )! as HTMLTemplateElement;
-
-    this.hostElement = document.getElementById("app")! as HTMLDivElement;
+    super("project-list", "app", false, `${type}-projects`);
 
     this.assignedProjects = [];
 
-    const importedNode = document.importNode(
-      this.templateElement.content,
-      true
-    );
-
-    this.element = importedNode.firstElementChild as HTMLElement;
-    this.element.id = `${type}-projects`;
-
-    projectState.addListener((projects: Project[]) => {
-      const relevantProject = projects.filter((project) => {
-        if (this.type === "active") {
-          return project.status === ProjectStatus.Active;
-        }
-        return project.status === ProjectStatus.Finished;
-      });
-
-      this.assignedProjects = relevantProject;
-
-      this.renderderProjects();
-    });
-
-    this.attach();
+    this.configure();
     this.renderContent();
   }
 
@@ -236,7 +208,22 @@ class ProjectList {
     }
   }
 
-  private renderContent() {
+  configure() {
+    projectState.addListener((projects: Project[]) => {
+      const relevantProject = projects.filter((project) => {
+        if (this.type === "active") {
+          return project.status === ProjectStatus.Active;
+        }
+        return project.status === ProjectStatus.Finished;
+      });
+
+      this.assignedProjects = relevantProject;
+
+      this.renderderProjects();
+    });
+  }
+
+  renderContent() {
     const listId = `${this.type}-projects-list`;
 
     this.element.querySelector("ul")!.id = listId;
@@ -244,10 +231,6 @@ class ProjectList {
     this.element.querySelector(
       "h2"
     )!.textContent = `${this.type.toUpperCase()} PROJECTS`;
-  }
-
-  private attach() {
-    this.hostElement.insertAdjacentElement("beforeend", this.element);
   }
 
   addProject() {}
