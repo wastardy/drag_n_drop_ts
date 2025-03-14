@@ -186,6 +186,29 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 }
 //#endregion
 
+//#region project item class
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+  private project: Project;
+
+  constructor(hostId: string, project: Project) {
+    super("single-project", hostId, false, project.id);
+    this.project = project;
+
+    this.configure();
+    this.renderContent();
+  }
+
+  configure() {}
+
+  renderContent() {
+    this.element.querySelector("h2")!.textContent = this.project.title;
+    this.element.querySelector("h3")!.textContent =
+      this.project.people.toString();
+    this.element.querySelector("p")!.textContent = this.project.description;
+  }
+}
+//#endregion
+
 //#region project list calss
 class ProjectList extends Component<HTMLDivElement, HTMLElement> {
   assignedProjects: Project[];
@@ -201,16 +224,14 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 
   configure() {
     projectState.addListener((projects: Project[]) => {
-      const relevantProject = projects.filter((project) => {
+      const relevantProjects = projects.filter((prj) => {
         if (this.type === "active") {
-          return project.status === ProjectStatus.Active;
+          return prj.status === ProjectStatus.Active;
         }
-        return project.status === ProjectStatus.Finished;
+        return prj.status === ProjectStatus.Finished;
       });
-
-      this.assignedProjects = relevantProject;
-
-      this.renderderProjects();
+      this.assignedProjects = relevantProjects;
+      this.renderProjects();
     });
   }
 
@@ -224,17 +245,15 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
     )!.textContent = `${this.type.toUpperCase()} PROJECTS`;
   }
 
-  private renderderProjects() {
-    const listElement = document.getElementById(
+  private renderProjects() {
+    const listEl = document.getElementById(
       `${this.type}-projects-list`
     )! as HTMLUListElement;
 
-    // get rid fo all list items and than render them again
-    listElement.innerHTML = "";
+    listEl.innerHTML = "";
 
-    for (const projectItem of this.assignedProjects) {
-      listElement.appendChild(document.createElement("li")).textContent =
-        projectItem.title;
+    for (const prjItem of this.assignedProjects) {
+      new ProjectItem(this.element.querySelector("ul")!.id, prjItem);
     }
   }
 
