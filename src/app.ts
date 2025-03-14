@@ -16,16 +16,25 @@ class Project {
 //#endregion
 
 //#region project state management
-type Listener = (items: Project[]) => void;
+type Listener<T> = (items: T[]) => void;
+
+class State<T> {
+  protected listeners: Listener<T>[] = [];
+
+  public addListener(listenerFunstion: Listener<T>) {
+    this.listeners.push(listenerFunstion);
+  }
+}
 //#endregion
 
 //#region project state management (singleton)
-class ProjectState {
-  private listeners: Listener[] = [];
+class ProjectState extends State<Project> {
   private projects: Project[] = [];
   private static instance: ProjectState; // Changed: instance needs to be static
 
-  private constructor() {}
+  private constructor() {
+    super();
+  }
 
   static getInstance() {
     if (this.instance) {
@@ -34,10 +43,6 @@ class ProjectState {
       this.instance = new ProjectState();
       return this.instance;
     }
-  }
-
-  public addListener(listenerFunstion: Listener) {
-    this.listeners.push(listenerFunstion);
   }
 
   public addProject(
