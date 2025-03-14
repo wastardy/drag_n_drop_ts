@@ -1,7 +1,24 @@
+//#region project type
+enum ProjectStatus {
+  Active,
+  Finished,
+}
+
+class Project {
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: ProjectStatus
+  ) {}
+}
+//#endregion
+
 //#region project state management (singleton)
 class ProjectState {
   private listeners: any[] = [];
-  private projects: any[] = [];
+  private projects: Project[] = [];
   private static instance: ProjectState; // Changed: instance needs to be static
 
   private constructor() {}
@@ -24,12 +41,13 @@ class ProjectState {
     description: string,
     numberOfPeople: number
   ) {
-    const newProject = {
-      id: Math.random().toString(),
+    const newProject = new Project(
+      Math.random().toString(),
       title,
       description,
-      people: numberOfPeople,
-    };
+      numberOfPeople,
+      ProjectStatus.Active
+    );
 
     this.projects.push(newProject);
 
@@ -120,7 +138,7 @@ class ProjectList {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
-  assignedProjects: any[];
+  assignedProjects: Project[];
 
   constructor(private type: "active" | "finished") {
     this.templateElement = document.getElementById(
