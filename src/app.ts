@@ -15,9 +15,13 @@ class Project {
 }
 //#endregion
 
+//#region project state management
+type Listener = (items: Project[]) => void;
+//#endregion
+
 //#region project state management (singleton)
 class ProjectState {
-  private listeners: any[] = [];
+  private listeners: Listener[] = [];
   private projects: Project[] = [];
   private static instance: ProjectState; // Changed: instance needs to be static
 
@@ -32,7 +36,7 @@ class ProjectState {
     }
   }
 
-  public addListener(listenerFunstion: Function) {
+  public addListener(listenerFunstion: Listener) {
     this.listeners.push(listenerFunstion);
   }
 
@@ -157,8 +161,15 @@ class ProjectList {
     this.element = importedNode.firstElementChild as HTMLElement;
     this.element.id = `${type}-projects`;
 
-    projectState.addListener((projects: any[]) => {
-      this.assignedProjects = projects;
+    projectState.addListener((projects: Project[]) => {
+      const relevantProject = projects.filter((project) => {
+        if (this.type === "active") {
+          return project.status === ProjectStatus.Active;
+        }
+        return project.status === ProjectStatus.Finished;
+      });
+
+      this.assignedProjects = relevantProject;
 
       this.renderderProjects();
     });
@@ -171,6 +182,9 @@ class ProjectList {
     const listElement = document.getElementById(
       `${this.type}-projects-list`
     )! as HTMLUListElement;
+
+    // get rid fo all list items and than render them again
+    listElement.innerHTML = "";
 
     for (const projectItem of this.assignedProjects) {
       listElement.appendChild(document.createElement("li")).textContent =
