@@ -6,7 +6,7 @@ interface Draggable {
 
 interface DragTarget {
   dragOverHandler(event: DragEvent): void;
-  dragHandler(event: DragEvent): void;
+  dropHandler(event: DragEvent): void;
   dragLeaveHandler(event: DragEvent): void;
 }
 //#endregion
@@ -72,9 +72,18 @@ class ProjectState extends State<Project> {
     );
 
     this.projects.push(newProject);
+    this.updateListeners();
+  }
 
+  public moveProject(projectId: string, newStatus: ProjectStatus) {
+    this.projects.find((project) => project.id === projectId)!.status =
+      newStatus;
+
+    this.updateListeners();
+  }
+
+  private updateListeners() {
     for (const listenerFunction of this.listeners) {
-      // slice() is used to create a copy of the array
       listenerFunction(this.projects.slice());
     }
   }
@@ -216,7 +225,8 @@ class ProjectItem
 
   @autobind
   dragStartHandler(event: DragEvent): void {
-    console.log(event);
+    event.dataTransfer!.setData("text/plain", this.project.id);
+    event.dataTransfer!.effectAllowed = "move";
   }
 
   @autobind
@@ -260,15 +270,23 @@ class ProjectList
   }
 
   @autobind
-  dragOverHandler(_: DragEvent): void {
-    // event.preventDefault();
+  dragOverHandler(event: DragEvent): void {
+    if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
+      event.preventDefault();
 
-    const listElement = this.element.querySelector("ul")!;
-    listElement.classList.add("droppable");
+      const listElement = this.element.querySelector("ul")!;
+      listElement.classList.add("droppable");
+    }
   }
 
-  dragHandler(_: DragEvent): void {
-    throw new Error("Method not implemented.");
+  @autobind
+  dropHandler(event: DragEvent): void {
+    const projectId = event.dataTransfer!.getData("text/plain");
+
+    projectState.moveProject(
+      projectId,
+      this.type === "active" ? ProjectStatus.Active : ProjectStatus.Finished
+    );
   }
 
   @autobind
@@ -280,7 +298,7 @@ class ProjectList
   configure() {
     this.element.addEventListener("dragover", this.dragOverHandler);
     this.element.addEventListener("dragleave", this.dragLeaveHandler);
-    // this.element.addEventListener("drop", this.dropHandler);
+    this.element.addEventListener("drop", this.dropHandler);
 
     projectState.addListener((projects: Project[]) => {
       const relevantProjects = projects.filter((prj) => {
