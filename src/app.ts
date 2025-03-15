@@ -200,7 +200,10 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 //#endregion
 
 //#region project item class
-class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+class ProjectItem
+  extends Component<HTMLUListElement, HTMLLIElement>
+  implements Draggable
+{
   private project: Project;
 
   constructor(hostId: string, project: Project) {
@@ -211,13 +214,26 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
     this.renderContent();
   }
 
+  @autobind
+  dragStartHandler(event: DragEvent): void {
+    console.log(event);
+  }
+
+  @autobind
+  dragEndHandler(_: DragEvent): void {
+    console.log("Drag ended");
+  }
+
   get persons() {
     return this.project.people === 1
       ? "1 person"
       : `${this.project.people} persons`;
   }
 
-  configure() {}
+  configure() {
+    this.element.addEventListener("dragstart", this.dragStartHandler);
+    this.element.addEventListener("dragend", this.dragEndHandler);
+  }
 
   renderContent() {
     this.element.querySelector("h2")!.textContent = this.project.title;
